@@ -1,4 +1,50 @@
+
+import { useEffect, useState } from "react";
+import { api } from "../infrastructure/apiClient";
+
+type Route = {
+  routeId: string;
+  vesselType: string;
+  fuelType: string;
+  year: number;
+  ghgIntensity: number;
+  fuelConsumption: number;
+  distance: number;
+  totalEmissions: number;
+  isBaseline: boolean;
+};
+
 export default function RoutesPage() {
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [filters, setFilters] = useState({
+    vesselType: "",
+    fuelType: "",
+    year: "",
+  });
+
+  const fetchRoutes = async () => {
+    const res = await api.get("/routes");
+    setRoutes(res.data);
+  };
+
+  const setBaseline = async (routeId: string) => {
+    await api.post(`/routes/${routeId}/baseline`);
+    await fetchRoutes(); // refresh UI
+  };
+
+  useEffect(() => {
+    fetchRoutes();
+  }, []);
+
+  // Filtered routes
+  const filteredRoutes = routes.filter((r) => {
+    return (
+      (!filters.vesselType || r.vesselType === filters.vesselType) &&
+      (!filters.fuelType || r.fuelType === filters.fuelType) &&
+      (!filters.year || r.year.toString() === filters.year)
+    );
+  });
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -16,28 +62,29 @@ export default function RoutesPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div>
           <label className="label">Vessel Type</label>
-          <select className="input">
-            <option>All Types</option>
-            <option>Container</option>
-            <option>Tanker</option>
-            <option>BulkCarrier</option>
+          <select className="input" onChange={(e) => setFilters({ ...filters, vesselType: e.target.value })}>
+            <option value="">All Types</option>
+            {[...new Set(routes.map((r) => r.vesselType))].map((v) => (
+              <option key={v} value={v}>{v}</option>
+            ))}
           </select>
         </div>
         <div>
           <label className="label">Fuel Type</label>
-          <select className="input">
-            <option>All Fuels</option>
-            <option>HFO</option>
-            <option>LNG</option>
-            <option>MGO</option>
+          <select className="input" onChange={(e) => setFilters({ ...filters, fuelType: e.target.value })}>
+            <option value="">All Fuels</option>
+            {[...new Set(routes.map((r) => r.fuelType))].map((f) => (
+              <option key={f} value={f}>{f}</option>
+            ))}
           </select>
         </div>
         <div>
           <label className="label">Year</label>
-          <select className="input">
-            <option>All Years</option>
-            <option>2024</option>
-            <option>2025</option>
+          <select className="input" onChange={(e) => setFilters({ ...filters, year: e.target.value })}>
+            <option value="">All Years</option>
+            {[...new Set(routes.map((r) => r.year.toString()))].map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
           </select>
         </div>
         <div className="flex items-end">
@@ -60,23 +107,34 @@ export default function RoutesPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
-            <tr className="hover:bg-slate-50 transition-colors">
-              <td className="px-4 py-3 text-sm font-medium text-slate-900">R001</td>
-              <td className="px-4 py-3 text-sm text-slate-600">Container</td>
-              <td className="px-4 py-3 text-sm text-slate-600">HFO</td>
-              <td className="px-4 py-3 text-sm text-slate-600">2024</td>
-              <td className="px-4 py-3 text-sm text-right font-medium text-slate-900">91.0 gCO₂e/MJ</td>
-              <td className="px-4 py-3 text-sm text-right text-slate-600">12,000</td>
-              <td className="px-4 py-3 text-sm text-center">
-                <button className="text-blue-600 hover:text-blue-800 font-medium text-sm">Set Baseline</button>
-              </td>
-            </tr>
+            {filteredRoutes.map((r) => (
+              <tr key={r.routeId} className="hover:bg-slate-50 transition-colors">
+                <td className="px-4 py-3 text-sm font-medium text-slate-900">{r.routeId}</td>
+                <td className="px-4 py-3 text-sm text-slate-600">{r.vesselType}</td>
+                <td className="px-4 py-3 text-sm text-slate-600">{r.fuelType}</td>
+                <td className="px-4 py-3 text-sm text-slate-600">{r.year}</td>
+                <td className="px-4 py-3 text-sm text-right font-medium text-slate-900">{r.ghgIntensity}</td>
+                <td className="px-4 py-3 text-sm text-right text-slate-600">{r.distance}</td>
+                <td className="px-4 py-3 text-sm text-center">
+                  {r.isBaseline ? (
+                    <span className="text-green-600 font-bold">Baseline</span>
+                  ) : (
+                    <button
+                      className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                      onClick={() => setBaseline(r.routeId)}
+                    >
+                      Set Baseline
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
       <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
-        <p>Showing 1 of 5 routes</p>
+        <p>Showing {filteredRoutes.length} of {routes.length} routes</p>
         <div className="flex gap-2">
           <button className="px-3 py-1 border border-slate-300 rounded hover:bg-slate-50">Previous</button>
           <button className="px-3 py-1 border border-slate-300 rounded hover:bg-slate-50">Next</button>
