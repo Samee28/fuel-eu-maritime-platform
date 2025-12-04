@@ -188,13 +188,34 @@ export default function BankingPage() {
           <p className="text-sm text-slate-600 mb-4">Store positive CB for future use</p>
           <div className="mb-4">
             <label className="label">Ship ID</label>
-            <input type="text" className="input" placeholder="e.g., R002" />
+            <select 
+              className="input" 
+              value={shipId}
+              onChange={(e) => setShipId(e.target.value)}
+            >
+              <option value="R001">R001</option>
+              <option value="R002">R002</option>
+              <option value="R003">R003</option>
+              <option value="R004">R004</option>
+              <option value="R005">R005</option>
+            </select>
           </div>
           <div className="mb-4">
             <label className="label">Amount (gCO₂e)</label>
-            <input type="number" className="input" placeholder="Enter amount" />
+            <input 
+              type="number" 
+              className="input" 
+              placeholder="Enter amount"
+              value={bankAmount}
+              onChange={(e) => setBankAmount(e.target.value)}
+            />
           </div>
-          <button className="btn-success w-full">Bank CB</button>
+          <button 
+            className="btn-success w-full"
+            onClick={handleBank}
+          >
+            Bank CB
+          </button>
         </div>
 
         <div className="card">
@@ -202,13 +223,34 @@ export default function BankingPage() {
           <p className="text-sm text-slate-600 mb-4">Use banked surplus to cover deficit</p>
           <div className="mb-4">
             <label className="label">Ship ID</label>
-            <input type="text" className="input" placeholder="e.g., R001" />
+            <select 
+              className="input"
+              value={shipId}
+              onChange={(e) => setShipId(e.target.value)}
+            >
+              <option value="R001">R001</option>
+              <option value="R002">R002</option>
+              <option value="R003">R003</option>
+              <option value="R004">R004</option>
+              <option value="R005">R005</option>
+            </select>
           </div>
           <div className="mb-4">
             <label className="label">Amount to Apply (gCO₂e)</label>
-            <input type="number" className="input" placeholder="Max: 200,000" />
+            <input 
+              type="number" 
+              className="input" 
+              placeholder="Max: 200,000"
+              value={applyAmount}
+              onChange={(e) => setApplyAmount(e.target.value)}
+            />
           </div>
-          <button className="btn w-full">Apply CB</button>
+          <button 
+            className="btn w-full"
+            onClick={handleApply}
+          >
+            Apply CB
+          </button>
         </div>
       </div>
 
