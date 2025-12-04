@@ -1,5 +1,5 @@
 export interface Route {
-  id?: number;
+  id: number;
   routeId: string;
   vesselType: string;
   fuelType: string;
@@ -8,5 +8,5 @@ export interface Route {
   fuelConsumption: number;
   distance: number;
   totalEmissions: number;
-  isBaseline?: boolean;
+  isBaseline: boolean;
 }
