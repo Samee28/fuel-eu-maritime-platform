@@ -1,47 +1,35 @@
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
-import { Route } from '../../../core/domain/route';
-import { RoutePort } from '../../../core/ports/routePort';
+import { PrismaClient } from "@prisma/client";
+import { RoutePort } from "../../../core/ports/routePort";
 
 export class RouteRepository implements RoutePort {
-  private prisma: PrismaClient;
+  private prisma = new PrismaClient();
 
-  constructor() {
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    const adapter = new PrismaPg(pool);
-    this.prisma = new PrismaClient({ adapter });
-  }
-
-  async findAll(): Promise<Route[]> {
+  async getAllRoutes() {
     return this.prisma.route.findMany();
   }
 
-  async findById(id: number): Promise<Route | null> {
-    return this.prisma.route.findUnique({ where: { id } });
+  async setBaseline(routeId: string) {
+    await this.prisma.route.updateMany({
+      data: { isBaseline: false },
+    });
+
+    await this.prisma.route.updateMany({
+      where: { routeId },
+      data: { isBaseline: true },
+    });
   }
 
-  async create(route: Omit<Route, 'id'>): Promise<Route> {
-    return this.prisma.route.create({ data: route });
-  }
+  async getComparisonRoutes() {
+    const baseline = await this.prisma.route.findFirst({
+      where: { isBaseline: true },
+    });
 
-  async update(id: number, route: Partial<Route>): Promise<Route | null> {
-    try {
-      return await this.prisma.route.update({
-        where: { id },
-        data: route,
-      });
-    } catch {
-      return null;
-    }
-  }
+    if (!baseline) throw new Error("No baseline route set.");
 
-  async delete(id: number): Promise<boolean> {
-    try {
-      await this.prisma.route.delete({ where: { id } });
-      return true;
-    } catch {
-      return false;
-    }
+    const others = await this.prisma.route.findMany({
+      where: { isBaseline: false },
+    });
+
+    return { baseline, others };
   }
 }
