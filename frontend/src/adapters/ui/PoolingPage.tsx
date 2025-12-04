@@ -1,130 +1,195 @@
+import { useState } from "react";
+import { api } from "../infrastructure/apiClient";
+
+type AdjustedCB = {
+  shipId: string;
+  cb: number;
+};
+
+type PoolResult = {
+  pool: {
+    shipId: string;
+    cb_before: number;
+    cb_after: number;
+  }[];
+  poolSum: number;
+};
+
 export default function PoolingPage() {
+  const [year, setYear] = useState("2024");
+  const [selectedShips, setSelectedShips] = useState<string[]>([]);
+  const [cbData, setCbData] = useState<AdjustedCB[]>([]);
+  const [result, setResult] = useState<PoolResult | null>(null);
+  const [error, setError] = useState("");
+
+  const ships = ["R001", "R002", "R003", "R004", "R005"];
+
+  const toggleShip = (shipId: string) => {
+    setSelectedShips((prev) =>
+      prev.includes(shipId)
+        ? prev.filter((s) => s !== shipId)
+        : [...prev, shipId]
+    );
+  };
+
+  const loadCB = async () => {
+    try {
+      const output: AdjustedCB[] = [];
+      for (const ship of selectedShips) {
+        const res = await api.get(
+          `/compliance/adjusted-cb?shipId=${ship}&year=${year}`
+        );
+        output.push(res.data);
+      }
+      setCbData(output);
+      setError("");
+    } catch (e: any) {
+      setError("Error loading adjusted CB data");
+    }
+  };
+
+  const createPool = async () => {
+    try {
+      if (cbData.length === 0) {
+        setError("Please load CB data first");
+        return;
+      }
+      
+      const res = await api.post("/pools", {
+        members: cbData, // Send cbData which has { shipId, cb } structure
+        year: Number(year),
+      });
+      setResult(res.data);
+      setError("");
+    } catch (e: any) {
+      setError(e.response?.data?.error || "Pool creation failed");
+    }
+  };
+
+  const poolSum = cbData.reduce((sum, s) => sum + s.cb, 0);
+
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-slate-900">Compliance Pooling</h2>
-        <p className="text-slate-500 mt-1">Create pools to redistribute CB between vessels</p>
-      </div>
+      <h2 className="text-2xl font-bold mb-4">Pooling</h2>
 
-      {/* Pool Validation */}
-      <div className="card bg-blue-50 border-blue-200 mb-6">
-        <div className="flex items-start gap-3">
-          <div className="text-2xl">ℹ️</div>
-          <div>
-            <h3 className="font-semibold text-blue-900 mb-1">Pool Creation Rules</h3>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Total adjusted CB must be ≥ 0</li>
-              <li>• Deficit ships cannot exit worse than before</li>
-              <li>• Surplus ships cannot exit with negative CB</li>
-              <li>• Greedy allocation: Surplus → Deficit (descending order)</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+      {/* Select year */}
+      <div className="flex gap-4 mb-4">
+        <select
+          className="border p-2"
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+        >
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+        </select>
 
-      {/* Create Pool */}
-      <div className="card mb-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Create New Pool</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="label">Pool Year</label>
-            <select className="input">
-              <option>2024</option>
-              <option>2025</option>
-            </select>
-          </div>
-          <div>
-            <label className="label">Pool Name (Optional)</label>
-            <input type="text" className="input" placeholder="e.g., Fleet Alpha Pool" />
-          </div>
-        </div>
-
-        {/* Members Selection */}
-        <div className="mb-4">
-          <label className="label">Select Pool Members</label>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="border border-slate-200 rounded-lg p-3 hover:bg-slate-50 cursor-pointer">
-              <div className="flex items-center justify-between mb-2">
-                <input type="checkbox" className="w-4 h-4" />
-                <span className="text-sm font-medium text-slate-900">R001</span>
-              </div>
-              <div className="text-xs text-red-600 font-medium">CB: -50,000 gCO₂e</div>
-              <div className="text-xs text-slate-500">Container • HFO</div>
-            </div>
-            <div className="border border-slate-200 rounded-lg p-3 hover:bg-slate-50 cursor-pointer">
-              <div className="flex items-center justify-between mb-2">
-                <input type="checkbox" className="w-4 h-4" />
-                <span className="text-sm font-medium text-slate-900">R002</span>
-              </div>
-              <div className="text-xs text-green-600 font-medium">CB: +120,000 gCO₂e</div>
-              <div className="text-xs text-slate-500">BulkCarrier • LNG</div>
-            </div>
-            <div className="border border-slate-200 rounded-lg p-3 hover:bg-slate-50 cursor-pointer">
-              <div className="flex items-center justify-between mb-2">
-                <input type="checkbox" className="w-4 h-4" />
-                <span className="text-sm font-medium text-slate-900">R003</span>
-              </div>
-              <div className="text-xs text-red-600 font-medium">CB: -20,000 gCO₂e</div>
-              <div className="text-xs text-slate-500">Tanker • MGO</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Pool Summary */}
-        <div className="bg-slate-50 rounded-lg p-4 mb-4">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-xs text-slate-500 mb-1">Total Members</div>
-              <div className="text-xl font-bold text-slate-900">0</div>
-            </div>
-            <div>
-              <div className="text-xs text-slate-500 mb-1">Total CB</div>
-              <div className="text-xl font-bold text-green-600">+0</div>
-            </div>
-            <div>
-              <div className="text-xs text-slate-500 mb-1">Pool Valid</div>
-              <div className="text-xl">⚪</div>
-            </div>
-          </div>
-        </div>
-
-        <button className="btn w-full" disabled>
-          Create Pool (Select members first)
+        <button onClick={loadCB} className="btn">
+          Load CB
         </button>
       </div>
 
-      {/* Existing Pools */}
-      <div className="card">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Recent Pools</h3>
-        <div className="space-y-4">
-          <div className="border border-slate-200 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h4 className="font-semibold text-slate-900">Pool #2</h4>
-                <p className="text-xs text-slate-500">Created: 2024-12-04</p>
-              </div>
-              <span className="badge-success">Valid</span>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-sm mb-3">
-              <div className="bg-slate-50 rounded p-2">
-                <div className="text-xs text-slate-500">R002</div>
-                <div className="font-medium text-green-600">+120k → +50k</div>
-              </div>
-              <div className="bg-slate-50 rounded p-2">
-                <div className="text-xs text-slate-500">R003</div>
-                <div className="font-medium text-slate-900">-20k → 0</div>
-              </div>
-              <div className="bg-slate-50 rounded p-2">
-                <div className="text-xs text-slate-500">R001</div>
-                <div className="font-medium text-slate-900">-50k → 0</div>
-              </div>
-            </div>
-            <div className="text-xs text-slate-500">
-              Total Pool CB: +50,000 gCO₂e
-            </div>
-          </div>
+      {/* Select ships */}
+      <div className="mb-4">
+        <h3 className="font-bold mb-2">Select Ships</h3>
+
+        <div className="flex gap-4 flex-wrap">
+          {ships.map((ship) => (
+            <label key={ship} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={selectedShips.includes(ship)}
+                onChange={() => toggleShip(ship)}
+              />
+              {ship}
+            </label>
+          ))}
         </div>
       </div>
+
+      {error && <p className="text-red-600 mb-3">{error}</p>}
+
+      {/* CB Table */}
+      {cbData.length > 0 && (
+        <table className="w-full border mb-6">
+          <thead className="bg-gray-200">
+            <tr>
+              <th className="p-2 border">Ship</th>
+              <th className="p-2 border">Adjusted CB</th>
+            </tr>
+          </thead>
+          <tbody>
+            {cbData.map((row) => (
+              <tr key={row.shipId}>
+                <td className="border p-2 text-center">{row.shipId}</td>
+                <td
+                  className={`border p-2 text-center ${
+                    row.cb >= 0 ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {row.cb}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {/* Pool sum */}
+      {cbData.length > 0 && (
+        <p className="font-bold mb-4">
+          Pool Sum:{" "}
+          <span className={poolSum >= 0 ? "text-green-600" : "text-red-600"}>
+            {poolSum}
+          </span>
+        </p>
+      )}
+
+      {/* Create pool */}
+      <button
+        className="btn"
+        disabled={poolSum < 0 || cbData.length === 0}
+        onClick={createPool}
+      >
+        Create Pool
+      </button>
+
+      {/* Result */}
+      {result && (
+        <div className="mt-6 p-4 border bg-gray-100">
+          <h3 className="font-bold mb-2">Pool Created</h3>
+
+          <table className="w-full border">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="border p-2">Ship</th>
+                <th className="border p-2">Before</th>
+                <th className="border p-2">After</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.pool.map((row) => (
+                <tr key={row.shipId}>
+                  <td className="border p-2 text-center">{row.shipId}</td>
+                  <td className="border p-2 text-center">{row.cb_before}</td>
+                  <td className="border p-2 text-center">{row.cb_after}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <p className="mt-3 font-bold">
+            Final Pool Sum:{" "}
+            <span
+              className={
+                result.poolSum >= 0 ? "text-green-600" : "text-red-600"
+              }
+            >
+              {result.poolSum}
+            </span>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
+

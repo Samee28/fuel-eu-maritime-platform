@@ -28,17 +28,41 @@ type CompareResult = {
 
 export default function ComparePage() {
   const [data, setData] = useState<CompareResult | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const loadComparison = async () => {
-    const res = await api.get("/routes/comparison");
-    setData(res.data);
+    try {
+      setLoading(true);
+      setError("");
+      const res = await api.get("/routes/comparison");
+      setData(res.data);
+    } catch (e: any) {
+      setError(e.response?.data?.error || "Failed to load comparison data");
+      console.error("Comparison error:", e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     loadComparison();
   }, []);
 
-  if (!data) return <p>Loading...</p>;
+  if (loading) return <p className="text-slate-600">Loading comparison data...</p>;
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded">
+        <p className="text-red-600 font-semibold mb-2">Error: {error}</p>
+        {error.includes("baseline") && (
+          <p className="text-sm text-red-700">
+            Please go to the Routes tab and set a baseline route first.
+          </p>
+        )}
+      </div>
+    );
+  }
+  if (!data) return <p className="text-slate-600">No data available</p>;
 
   const labels = data.comparison.map((c) => c.routeId);
 
