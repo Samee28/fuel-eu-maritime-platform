@@ -8,6 +8,9 @@ import {
   setBaseline,
   getComparison,
 } from "../../adapters/inbound/http/routesController";
+import { getCB } from "../../adapters/inbound/http/complianceController";
+import { getBankRecords, bankCB, applyBankedCB } from "../../adapters/inbound/http/bankingController";
+import { createPool } from "../../adapters/inbound/http/poolingController";
 
 const app = express();
 
@@ -25,6 +28,21 @@ app.get("/", (_req: Request, res: Response) => {
 app.get("/routes", getRoutes);
 app.get("/routes/:id/baseline", setBaseline);
 app.get("/routes/comparison", getComparison);
+
+// COMPLIANCE API ENDPOINTS
+// -----------------------------
+app.get("/compliance/cb", getCB);
+
+// -----------------------------
+// BANKING API ENDPOINTS
+// -----------------------------
+app.get("/banking/records", getBankRecords);
+app.post("/banking/bank", bankCB);
+app.post("/banking/apply", applyBankedCB);
+
+// POOLING API ENDPOINTS
+// -----------------------------
+app.post("/pools", createPool);
 
 // -----------------------------
 // SERVER START

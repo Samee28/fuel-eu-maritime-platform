@@ -1,0 +1,43 @@
+### Health Check
+GET http://localhost:4000/
+
+### Get All Routes
+GET http://localhost:4000/routes
+
+### Set Baseline Route
+GET http://localhost:4000/routes/R001/baseline
+
+### Get Route Comparison
+GET http://localhost:4000/routes/comparison
+
+### Get Compliance Balance for R001
+GET http://localhost:4000/compliance/cb?routeId=R001
+
+### Get Compliance Balance for R002
+GET http://localhost:4000/compliance/cb?routeId=R002
+
+### Get Compliance Balance for R003
+GET http://localhost:4000/compliance/cb?routeId=R003
+
+### Bank Surplus CB
+POST http://localhost:4000/banking/bank
+Content-Type: application/json
+
+{
+  "shipId": "R002",
+  "year": 2024,
+  "cb": 100000
+}
+
+### Get Banking Records
+GET http://localhost:4000/banking/records?shipId=R002
+
+### Apply Banked CB
+POST http://localhost:4000/banking/apply
+Content-Type: application/json
+
+{
+  "shipId": "R002",
+  "year": 2024,
+  "amount": 50000
+}
