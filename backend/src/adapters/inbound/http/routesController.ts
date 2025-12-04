@@ -25,7 +25,9 @@ export const getComparison = async (_req: Request, res: Response) => {
     const { baseline, others } = await repo.getComparisonRoutes();
     const comparison = compareUseCase.execute(baseline, others);
     res.json({ baseline, comparison });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to get comparison" });
+  } catch (error: any) {
+    // eslint-disable-next-line no-console
+    console.error("Comparison error:", error.message);
+    res.status(500).json({ error: error.message || "Failed to get comparison" });
   }
 };
