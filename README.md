@@ -791,45 +791,5 @@ model PoolMember {
 
 ---
 
-## 👨‍💻 Author
-
-<div align="center">
-
-**Samee28**
-
-GitHub: [@Samee28](https://github.com/Samee28)  
-Repository: [fuel-eu-maritime-platform](https://github.com/Samee28/fuel-eu-maritime-platform)
-
-*Developed as part of a company technical assignment*  
-*December 4, 2025*
-
-</div>
-
----
-
-## 📄 Project Information
-
-- **Project Type:** Company Technical Assignment
-- **Architecture:** Hexagonal (Ports & Adapters / Clean Architecture)
-- **Development Approach:** AI-Assisted with GitHub Copilot
-- **Time Investment:** 7.75 hours (68% efficiency gain)
-- **Status:** ✅ Production-Ready
-
----
-
-## 🙏 Acknowledgments
-
-- **FuelEU Maritime Regulation Framework** - Business domain knowledge
-- **GitHub Copilot (Claude Sonnet 4.5)** - AI-assisted development
-- **Clean Architecture Principles** - Robert C. Martin
-- **Hexagonal Architecture Pattern** - Alistair Cockburn
-
----
-
-<div align="center">
-
-**⚓ Built with Clean Architecture • TypeScript • AI-Assisted Development ⚓**
-
-*"Quality code, delivered faster, through human-AI collaboration"*
 
 </div>
