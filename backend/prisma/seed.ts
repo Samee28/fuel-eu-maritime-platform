@@ -10,6 +10,13 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  // Clear existing data
+  await prisma.poolMember.deleteMany({});
+  await prisma.pool.deleteMany({});
+  await prisma.bankEntry.deleteMany({});
+  await prisma.shipCompliance.deleteMany({});
+  await prisma.route.deleteMany({});
+
   await prisma.route.createMany({
     data: [
       {
@@ -65,7 +72,24 @@ async function main() {
     ],
   });
 
+  // Seed ShipCompliance data (CB values)
+  await prisma.shipCompliance.createMany({
+    data: [
+      { shipId: "R001", year: 2024, cbValue: -50000 },
+      { shipId: "R002", year: 2024, cbValue: 120000 },
+      { shipId: "R003", year: 2024, cbValue: -20000 },
+      { shipId: "R004", year: 2024, cbValue: 80000 },
+      { shipId: "R005", year: 2024, cbValue: -30000 },
+      { shipId: "R001", year: 2025, cbValue: -45000 },
+      { shipId: "R002", year: 2025, cbValue: 110000 },
+      { shipId: "R003", year: 2025, cbValue: -25000 },
+      { shipId: "R004", year: 2025, cbValue: 75000 },
+      { shipId: "R005", year: 2025, cbValue: -35000 },
+    ],
+  });
+
   console.log("🌱 Seeded routes successfully!");
+  console.log("🌱 Seeded ship compliance data successfully!");
 }
 
 main()

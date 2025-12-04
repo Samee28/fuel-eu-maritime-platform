@@ -52,4 +52,40 @@ export class ComplianceService {
 
     return result;
   }
+
+  async getAdjustedCB(shipId: string, year: number) {
+    // Get the base CB from ShipCompliance table
+    const compliance = await this.getPrisma().shipCompliance.findUnique({
+      where: {
+        shipId_year: {
+          shipId,
+          year,
+        },
+      },
+    });
+
+    if (!compliance) {
+      throw new Error(`No compliance data found for ship ${shipId} in year ${year}`);
+    }
+
+    // Get all bank entries for this ship and year
+    const bankEntries = await this.getPrisma().bankEntry.findMany({
+      where: {
+        shipId,
+        year,
+      },
+    });
+
+    // Calculate adjusted CB (base CB + sum of all bank entries)
+    const bankTotal = bankEntries.reduce((sum, entry) => sum + entry.amount, 0);
+    const adjustedCB = compliance.cbValue + bankTotal;
+
+    return {
+      shipId,
+      year,
+      baseCB: compliance.cbValue,
+      bankTotal,
+      cb: adjustedCB,
+    };
+  }
 }

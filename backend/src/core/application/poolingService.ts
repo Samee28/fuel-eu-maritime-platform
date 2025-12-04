@@ -22,7 +22,24 @@ export class PoolingService {
   }
 
   async createPool(year: number, members: { shipId: string; cb: number }[]) {
+    // Validate input
+    if (!members || members.length === 0) {
+      throw new Error("Pool must have at least one member");
+    }
+
+    // Validate each member has required fields
+    for (const member of members) {
+      if (!member.shipId || member.cb === undefined) {
+        throw new Error(`Invalid member data: ${JSON.stringify(member)}`);
+      }
+    }
+
     const result = this.useCase.createPool(members);
+
+    // Ensure result is valid before creating pool
+    if (!result || result.length === 0) {
+      throw new Error("Pool calculation returned no results");
+    }
 
     const pool = await this.getPrisma().pool.create({
       data: {
@@ -38,6 +55,16 @@ export class PoolingService {
       include: { members: true },
     });
 
-    return pool;
+    // Calculate pool sum from cb_after values
+    const poolSum = pool.members.reduce((sum, m) => sum + m.cb_after, 0);
+
+    return {
+      pool: pool.members.map(m => ({
+        shipId: m.shipId,
+        cb_before: m.cb_before,
+        cb_after: m.cb_after,
+      })),
+      poolSum,
+    };
   }
 }

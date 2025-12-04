@@ -8,7 +8,7 @@ import {
   setBaseline,
   getComparison,
 } from "../../adapters/inbound/http/routesController";
-import { getCB } from "../../adapters/inbound/http/complianceController";
+import { getCB, getAdjustedCB } from "../../adapters/inbound/http/complianceController";
 import { getBankRecords, bankCB, applyBankedCB } from "../../adapters/inbound/http/bankingController";
 import { createPool } from "../../adapters/inbound/http/poolingController";
 
@@ -32,6 +32,7 @@ app.get("/routes/comparison", getComparison);
 // COMPLIANCE API ENDPOINTS
 // -----------------------------
 app.get("/compliance/cb", getCB);
+app.get("/compliance/adjusted-cb", getAdjustedCB);
 
 // -----------------------------
 // BANKING API ENDPOINTS
