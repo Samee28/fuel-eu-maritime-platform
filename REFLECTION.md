@@ -332,7 +332,7 @@ If software development is building a house, AI is the power tools that let you 
 
 ---
 
-*Developed by: Samee28*  
+
 *Date: December 4, 2025*  
 *Project: FuelEU Maritime Compliance Platform*  
 *AI Assistant: GitHub Copilot (Claude Sonnet 4.5)*
