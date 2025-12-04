@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express, { Request, Response } from "express";
 import cors from "cors";
 
@@ -22,7 +23,7 @@ app.get("/", (_req: Request, res: Response) => {
 // ROUTES API ENDPOINTS
 // -----------------------------
 app.get("/routes", getRoutes);
-app.post("/routes/:id/baseline", setBaseline);
+app.get("/routes/:id/baseline", setBaseline);
 app.get("/routes/comparison", getComparison);
 
 // -----------------------------

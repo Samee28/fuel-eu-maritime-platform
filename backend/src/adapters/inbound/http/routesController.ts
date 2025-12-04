@@ -10,8 +10,13 @@ export const getRoutes = async (_req: Request, res: Response) => {
 };
 
 export const setBaseline = async (req: Request, res: Response) => {
-  await service.setBaselineRoute(req.params.id);
-  res.json({ message: "Baseline route updated successfully" });
+  try {
+    const routeId = req.params.id;
+    await service.setBaselineRoute(routeId);
+    res.json({ message: "Baseline route updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to set baseline route" });
+  }
 };
 
 export const getComparison = async (_req: Request, res: Response) => {
