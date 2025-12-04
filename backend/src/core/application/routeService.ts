@@ -1,6 +1,9 @@
 import { RoutePort } from "../ports/routePort";
+import { CompareUseCase } from "./compareUseCase";
 
 export class RouteService {
+  private compareUseCase = new CompareUseCase();
+
   constructor(private routePort: RoutePort) {}
 
   async listRoutes() {
@@ -12,6 +15,7 @@ export class RouteService {
   }
 
   async getComparison() {
-    return this.routePort.getComparisonRoutes();
+    const { baseline, others } = await this.routePort.getComparisonRoutes();
+    return this.compareUseCase.execute(baseline, others);
   }
 }
